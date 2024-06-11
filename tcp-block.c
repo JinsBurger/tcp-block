@@ -13,6 +13,17 @@ Param param = {
 	.dev_ = NULL
 };
 
+uint32_t is_http_pkt(char *data, uint32_t data_len) {
+	const char* http_methods[] = {"GET", "POST", "HEAD", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", "PATCH"};
+
+	for(int i=0; i < sizeof(http_methods) / sizeof(char*); i++) {
+		if(data_len > strlen(http_methods[i]) && !strncasecmp(data, http_methods[i], strlen(http_methods[i]))) {		
+			return 0;
+		}		
+	}
+	return -1;
+}
+
 bool parse(Param* param, int argc, char* argv[]) {
 	if (argc != 2) {
 		usage();

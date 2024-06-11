@@ -1,9 +1,9 @@
 LDLIBS += -lpcap
 
-all: pcap-test
+all: tcp-block
 
-pcap-test: pcap-test.c
+tcp-block: tcp-block.o
 
 clean:
-	rm -f pcap-test *.o
+	rm -f tcp-block *.o
 
