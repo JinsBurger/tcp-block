@@ -12,11 +12,17 @@
 #include "./include/libnet/libnet-headers.h"
 
 
-#define IPPROTO_IPV4 0x0800
-//#define IPPROTO_TCP 6
+#define BANNED_HTTP_RESPONSE "HTTP/1.0 302 Redirect\r\nLocation: http://warning.or.kr\r\n\r\n"
 
-typedef enum E_STATUS {
-    ERROR=0,
-    SUCCESS,
-    IS_NOT_IPV4_TCP
-} E_STATUS;
+#pragma pack(push, 1)
+typedef struct
+{
+    uint32_t src;
+    uint32_t dst;
+    uint8_t reserved;
+    uint8_t protocol;
+    uint16_t len;
+}PsuedoHdr;
+#pragma pack(pop)
+
+#define IPPROTO_IPV4 0x0800

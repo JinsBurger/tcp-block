@@ -1,35 +1,28 @@
-#include "./pcap-test.h"
+#include "./tcp-block.h"
 
 void usage() {
-	printf("syntax: pcap-test <interface>\n");
-	printf("sample: pcap-test wlan0\n");
+	printf("tcp-block <interface> <pattern>\n");
+	printf("tcp-block wlan0 \"Host: test.gilgil.net\"\n");
 }
 
 typedef struct {
 	char* dev_;
+	char *pattern;
 } Param;
 
 Param param = {
-	.dev_ = NULL
+	.dev_ = NULL,
+	.pattern = NULL
 };
 
-uint32_t is_http_pkt(char *data, uint32_t data_len) {
-	const char* http_methods[] = {"GET", "POST", "HEAD", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", "PATCH"};
-
-	for(int i=0; i < sizeof(http_methods) / sizeof(char*); i++) {
-		if(data_len > strlen(http_methods[i]) && !strncasecmp(data, http_methods[i], strlen(http_methods[i]))) {		
-			return 0;
-		}		
-	}
-	return -1;
-}
 
 bool parse(Param* param, int argc, char* argv[]) {
-	if (argc != 2) {
+	if (argc != 3) {
 		usage();
 		return false;
 	}
 	param->dev_ = argv[1];
+	param->pattern = argv[2];
 	return true;
 }
 
@@ -38,11 +31,14 @@ int main(int argc, char* argv[]) {
 		return -1;
 
 	char errbuf[PCAP_ERRBUF_SIZE];
-	pcap_t* pcap = pcap_open_live(param.dev_, BUFSIZ, 1, 1000, errbuf);
+	char my_mac[0x1000] = {0, };
+	pcap_t* pcap = pcap_open_live(param.dev_, BUFSIZ, 1, 1, errbuf);
 	if (pcap == NULL) {
 		fprintf(stderr, "pcap_open_live(%s) return null - %s\n", param.dev_, errbuf);
 		return -1;
 	}
+
+	get_my_mac(param.dev_, my_mac, sizeof(my_mac));
 
 	while (true) {
 		struct pcap_pkthdr* header;
@@ -55,13 +51,11 @@ int main(int argc, char* argv[]) {
 		}
 
 
-		if(is_ipv4_tcp_packet(packet) == SUCCESS) {
-			dump_ipv4_tcp_packet(packet, header->caplen);
+		if(is_ipv4_http_packet(packet)) {
+			filter_http(pcap, packet, header->len, param.pattern, my_mac);
 		} else {
 		//	printf("[!] It is not IPv4-TCP!\n");
 		}
-
-		//printf("%u bytes captured\n", header->caplen);
 	}
 
 	pcap_close(pcap);
