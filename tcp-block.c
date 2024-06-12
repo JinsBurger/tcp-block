@@ -38,7 +38,10 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	get_my_mac(param.dev_, my_mac, sizeof(my_mac));
+	if(get_my_mac(param.dev_, my_mac, sizeof(my_mac)) != 0) {
+		printf("Failed to obtain mac\n");
+		exit(-1);
+	}
 
 	while (true) {
 		struct pcap_pkthdr* header;

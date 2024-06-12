@@ -10,16 +10,8 @@
 #include <string.h>
 #include "./headers.h"
 
-
-#define TO_MAC_STR(host,result) \
-do {\
-    snprintf(result, sizeof(result), "%02x:%02x:%02x:%02x:%02x:%02x", host[0], host[1], host[2], host[3], host[4], host[5]); \
-} while(0)
-
-
-
 uint32_t is_http_pkt(const u_char *packet) {
-	const char* http_methods[] = {"GET", "POST", "HEAD", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", "PATCH"};
+    const char* http_methods[] = {"GET", "POST", "HEAD", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", "PATCH"};
     char *data; uint32_t len;
     char* pos;
     struct libnet_ethernet_hdr *eth_hdr;
@@ -36,13 +28,13 @@ uint32_t is_http_pkt(const u_char *packet) {
     else
         len = pos - (char*)data;
 
-    
-	for(int i=0; i < sizeof(http_methods) / sizeof(char*); i++) {
-		if(len > strlen(http_methods[i]) && !strncasecmp(data, http_methods[i], strlen(http_methods[i]))) {	
-			return 1;
-		}		
-	}
-	return 0;
+
+    for(int i=0; i < sizeof(http_methods) / sizeof(char*); i++) {
+        if(len > strlen(http_methods[i]) && !strncasecmp(data, http_methods[i], strlen(http_methods[i]))) {	
+            return 1;
+        }		
+    }
+    return 0;
 }
 
 uint32_t is_ipv4(const u_char* packet) {
@@ -98,8 +90,7 @@ uint16_t calc_checksum(uint16_t *data, uint32_t len) {
 
 uint32_t calc_tcp_checksum(void *data, PsuedoHdr *pseudo) {
     uint32_t checksum =  calc_checksum((uint16_t*)pseudo, sizeof(PsuedoHdr)) + calc_checksum(data, ntohs(pseudo->len));
-    checksum = (checksum>>16) + (checksum&0xffff);
-    //checksum += (checksum>>16);
+    checksum = (checksum >> 16) + (checksum & 0xffff);
     return checksum;
 }
 
@@ -142,7 +133,7 @@ void filter_http(pcap_t *handle, const u_char* packet, uint32_t pkt_len, const u
     memcpy(((struct libnet_ethernet_hdr*)new_server_pkt)->ether_shost, my_mac, 6);
     memcpy(((struct libnet_ethernet_hdr*)new_client_pkt)->ether_shost, my_mac, 6);
 
-    /* BACKWARD Packet */
+    /* Backward Packet */
     ipv4_client = (struct libnet_ipv4_hdr*)(new_client_pkt + sizeof(struct libnet_ethernet_hdr));
     ipv4_client->ip_hl = ori_ipv4_hdr->ip_hl;
 
@@ -181,8 +172,7 @@ void filter_http(pcap_t *handle, const u_char* packet, uint32_t pkt_len, const u
     
     /* Calculate Checksum */
     PsuedoHdr psuedo_tmp = {0, };
-
-
+    
     //For Backward
     psuedo_tmp.dst = ipv4_client->ip_dst.s_addr;
     psuedo_tmp.src = ipv4_client->ip_src.s_addr;
